@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
+from torch.utils.data import Dataset, TensorDataset
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 import os
@@ -10,17 +11,35 @@ import os
 batch_size = 32
 
 # 64x64 images!
-transform = transforms.Compose([transforms.Resize(64),
-                                transforms.CenterCrop(64),
+transform = transforms.Compose([
                                 transforms.ToTensor(),
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-train_data = datasets.ImageFolder('../input/generative-dog-images/all-dogs/', transform=transform)
-train_loader = torch.utils.data.DataLoader(train_data, shuffle=True,
+#train_data = datasets.ImageFolder('../input/generative-dog-images/all-dogs/', transform=transform)
+
+class CustomTensorDataset(Dataset):
+    """TensorDataset with support of transforms."""
+    def __init__(self, tensor, transform=None):
+        self.tensor = tensor
+        self.transform = transform
+
+    def __getitem__(self, index):
+        x = self.tensor[index]
+        if self.transform:
+            x = self.transform(x)
+        return x
+
+    def __len__(self):
+        return self.tensor.shape[0]
+		
+train_data_np = np.load('../input/generative-dog-images/all-dogs/cropped_all_dogs.npz')["arr_0"]
+train_data = CustomTensorDataset(train_data_np, transform=transform) 
+train_loader = torch.utils.data.DataLoader(train_data, 
+                                           shuffle=True,
                                            batch_size=batch_size)
                                            
-imgs, label = next(iter(train_loader))
-imgs = imgs.numpy().transpose(0, 2, 3, 1)
+imgs = next(iter(train_loader))
+imgs = imgs.numpy().transpose(0, 3, 1, 2)
 
 class Generator(nn.Module):
     def __init__(self, nz, nfeats, nchannels):
@@ -119,17 +138,17 @@ batch_size = train_loader.batch_size
 
 ### training here
 
-epochs = 30
+epochs = 15
 
 step = 0
 for epoch in range(epochs):
-    for ii, (real_images, train_labels) in enumerate(train_loader):
+    for ii, real_images in enumerate(train_loader):
         ############################
         # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
         ###########################
         # train with real
         netD.zero_grad()
-        real_images = real_images.to(device)
+        real_images = real_images.to(device, dtype=torch.float)
         batch_size = real_images.size(0)
         labels = torch.full((batch_size, 1), real_label, device=device)
 
