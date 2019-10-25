@@ -42,6 +42,7 @@ if DogsOnly:
                 namesIn.append(breed)
                 idxIn += 1
     idx = np.arange(idxIn)
+    np.savez_compressed("cropped_all_dogs.npz", imagesIn)
     np.random.shuffle(idx)
     imagesIn = imagesIn[idx,:,:,:]
     namesIn = np.array(namesIn)[idx]
@@ -75,15 +76,14 @@ else:
     
 #DISPLAY CROPPED IMAGES
 x = np.random.randint(0,idxIn,25)
-#x = np.random.randint(0,5,25)
-for k in range(5):
-    plt.figure(figsize=(15,3))
-    for j in range(5):
-        plt.subplot(1,5,j+1)
-        img = Image.fromarray( imagesIn[x[k*5+j],:,:,:].astype('uint8') )
-        plt.axis('off')
-        if not DogsOnly: plt.title(namesIn[x[k*5+j]],fontsize=11)
-        else: plt.title(namesIn[x[k*5+j]].split('-')[1],fontsize=11)
-        plt.imshow(img)
-    plt.show()
+#for k in range(5):
+    #plt.figure(figsize=(15,3))
+    #for j in range(5):
+        #plt.subplot(1,5,j+1)
+        #img = Image.fromarray( imagesIn[x[k*5+j],:,:,:].astype('uint8') )
+        #plt.axis('off')
+        #if not DogsOnly: plt.title(namesIn[x[k*5+j]],fontsize=11)
+        #else: plt.title(namesIn[x[k*5+j]].split('-')[1],fontsize=11)
+        #plt.imshow(img)
+    #plt.show()
 	
